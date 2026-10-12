@@ -1,0 +1,8 @@
+[Unit]
+Description=brain backup weekly (full binaries, split parts)
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash __STACK_DIR__/scripts/backup-weekly.sh
+TimeoutStartSec=2h
+StandardOutput=journal
+StandardError=journal

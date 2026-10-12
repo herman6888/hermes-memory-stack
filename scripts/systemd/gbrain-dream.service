@@ -1,0 +1,9 @@
+[Unit]
+Description=gbrain nightly dream maintenance cycle
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash __STACK_DIR__/scripts/gbrain-dream.sh
+WorkingDirectory=__GBRAIN_DIR__
+Environment=HOME=%h
+StandardOutput=journal
+StandardError=journal

@@ -1,0 +1,7 @@
+[Unit]
+Description=brain backup daily (text increments to encrypted git repo)
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash __STACK_DIR__/scripts/backup-daily.sh
+StandardOutput=journal
+StandardError=journal

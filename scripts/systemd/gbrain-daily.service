@@ -1,0 +1,9 @@
+[Unit]
+Description=gbrain daily maintenance (sync, extract, embed)
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash __STACK_DIR__/scripts/gbrain-daily.sh
+WorkingDirectory=__GBRAIN_DIR__
+Environment=HOME=%h
+StandardOutput=journal
+StandardError=journal

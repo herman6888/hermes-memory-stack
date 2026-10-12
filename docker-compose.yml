@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: brain-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PG_USER:-brain}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:***
+      POSTGRES_DB: gbrain
+    ports:
+      - "${PG_PORT:-5434}:5432"
+    volumes:
+      - ${STACK_DATA_DIR:-./.stack-data}/pg:/var/lib/postgresql/data
+
+  openviking:
+    image: ghcr.io/volcengine/openviking:latest
+    container_name: openviking
+    restart: unless-stopped
+    ports:
+      - "${OV_PORT:-1933}:1933"
+    volumes:
+      - ${OV_DATA_DIR:-$HOME/.hermes/.local/share/openviking}:/app/.openviking
+    environment:
+      TZ: ${TZ:-Asia/Hong_Kong}

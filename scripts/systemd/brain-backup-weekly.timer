@@ -1,0 +1,8 @@
+[Unit]
+Description=brain backup weekly timer
+[Timer]
+OnCalendar=*-*-* 22:30 Sunday
+Persistent=true
+RandomizedDelaySec=120
+[Install]
+WantedBy=timers.target
