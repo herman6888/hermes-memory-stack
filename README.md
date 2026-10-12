@@ -36,6 +36,7 @@ cp .env.example .env        # 填 LLM/embedding 端点等
 |---|---|
 | `docs/architecture.md` | 三层记忆 + 金字塔 + 卫生纪律（设计文档） |
 | `docs/restore.md` | 灾难恢复手册（按灾难范围从小到大） |
+| `docs/troubleshooting.md` | 全新机器安装/恢复演练的实测踩坑（git-crypt eol、bun+pg 认证、pg 版本、价格闸门） |
 | `docker-compose.yml` | Postgres(pgvector) + OpenViking |
 | `templates/` | ov.conf / gbrain 配置 / SOUL 纪律段（占位符化） |
 | `scripts/` | 每日/每周备份、skill 审计、dream/daily、恢复脚本、systemd 单元 |

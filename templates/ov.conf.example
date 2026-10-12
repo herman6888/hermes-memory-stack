@@ -3,7 +3,7 @@
     "workspace": "/app/.openviking/data"
   },
   "server": {
-    "host": "127.0.0.1",
+    "host": "0.0.0.0",
     "port": 1933,
     "root_api_key": "<REDACTED: 生成一个强随机 key>"
   },

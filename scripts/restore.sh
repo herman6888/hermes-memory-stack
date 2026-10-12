@@ -2,7 +2,7 @@
 # Disaster recovery from the encrypted backup repo (assumes install.sh done).
 # Ladder from smallest to largest scope — see docs/restore.md for context.
 set -uo pipefail
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."          # repo root (this script lives in scripts/)
 set -a; . ./.env; set +a
 B="$BACKUP_LOCAL_DIR"
 [ -d "$B" ] || git clone "$BACKUP_REPO_URL" "$B"
@@ -15,9 +15,14 @@ LATEST_CHUNKS=$(ls -1 "$B"/daily/gbrain-chunks-*.csv 2>/dev/null | tail -1)
 echo "全量 dump: ${LATEST_FULL:-无}  | 文本增量: ${LATEST_META:-无}"
 if [ -n "$LATEST_FULL" ]; then
   echo "→ 全量恢复（含向量，最快）"
-  cat "$LATEST_FULL".part* > /tmp/restore-full.dump
-  pg_restore -U "$PG_USER" -h 127.0.0.1 -p "$PG_PORT" -d gbrain --create --clean /tmp/restore-full.dump \
-    || echo "WARN: pg_restore 有告警（--clean 对空库正常），检查上方输出"
+  # 兼容性：pg_dump ≥18 写入的 transaction_timeout 参数老服务器不认识
+  cat "$LATEST_FULL".part* | sed '/SET transaction_timeout/d' > /tmp/restore-full.dump
+  # 用容器内的 pg 客户端（与服务端同版本）重建库再灌入
+  docker exec "$POSTGRES_CONTAINER" psql -U "${PG_SUPERUSER:-postgres}" -d postgres \
+    -c "DROP DATABASE IF EXISTS gbrain;" -c "CREATE DATABASE gbrain OWNER $PG_USER;" \
+    || { echo "X 重建数据库失败（检查 PG_SUPERUSER，容器超级用户可能不是 postgres）"; exit 1; }
+  docker exec -i "$POSTGRES_CONTAINER" pg_restore -U "$PG_USER" -d gbrain --clean --if-exists \
+    < /tmp/restore-full.dump || echo "WARN: pg_restore 有告警，检查上方输出"
   rm -f /tmp/restore-full.dump
 elif [ -n "$LATEST_META" ]; then
   echo "→ 文本重建（慢，需重新 embed）"
@@ -32,9 +37,10 @@ else
 OV_LATEST=$(ls "$B"/weekly/ov-data-*.tar.zst.part* 2>/dev/null | sed 's/\.part[0-9]*$//' | sort -u | tail -1)
 if [ -n "$OV_LATEST" ]; then
   echo "→ 恢复 OpenViking 数据"
-  docker stop openviking
-  cat "$OV_LATEST".part* | zstd -d | tar -x -f - -C "$(dirname "$OV_DATA_DIR")"
-  docker start openviking
+  SUDO=""; [ "$(id -u)" != 0 ] && SUDO="sudo"
+  $SUDO docker stop openviking
+  cat "$OV_LATEST".part* | zstd -d | $SUDO tar -x -f - -C "$(dirname "$OV_DATA_DIR")"
+  $SUDO docker start openviking
 fi
 
 HS_LATEST=$(ls "$B"/weekly/hermes-state-*.tar.zst.part* 2>/dev/null | sed 's/\.part[0-9]*$//' | sort -u | tail -1)
