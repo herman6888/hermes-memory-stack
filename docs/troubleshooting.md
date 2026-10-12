@@ -54,9 +54,9 @@ host all all 0.0.0.0/0 md5
 - embed 模型配置不写在 config.json 的 `embedding_model`（被新配置平面忽略），
   由 `gbrain migrate embeddings --to <provider>:<model> --dim <N> --yes` 写入。
 
-## 5. compose 的 `${VAR:*** 插值
+## 5. compose 的简单变量插值
 
-老版 docker-compose 不认识 `${VAR:*** 报错。用简单 `${VAR}`。
+老版 docker-compose 不认识 `${VAR:-default}` 写法时报错。用简单 `${VAR}`。
 
 ## 6. OpenViking 官方镜像与配置生成
 

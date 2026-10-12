@@ -24,11 +24,17 @@
 git clone https://github.com/herman6888/hermes-memory-stack.git
 cd hermes-memory-stack
 cp .env.example .env        # 填 LLM/embedding 端点等
-./install.sh                # 依赖 + Hermes + gbrain + compose 起服务
-./configure.sh              # gbrain 配置 + OV key + systemd timers + skills 安装
-# 有备份仓库则恢复数据：
-./scripts/restore.sh
+./install.sh                # 开头「配置向导」统一询问，之后全自动：依赖+容器+gbrain+恢复
+./scripts/restore.sh        # （安装时未选恢复的话）单独恢复
 ```
+
+- **发行版支持**：Arch / CachyOS / Manjaro / Omarchy（pacman）、Ubuntu / Debian（apt）；
+  Windows 用 `install.cmd`（winget + Docker Desktop + MSYS2）。
+- **所有询问集中在 install.sh 开头的配置向导**（步骤 0）：端点、数据恢复、Hermes、定时器。
+  之后全自动：组件先检测、已装自动跳过（`~` 行），中断修复后直接重跑续装。
+- **非交互**：`./install.sh --yes --restore --no-hermes`（无 TTY 自动 --yes）。
+  flags：`--restore|--no-restore` `--hermes|--no-hermes` `--timers|--no-timers` `--yes`。
+- `./configure.sh` 可单独重跑（幂等，写 gbrain/OV 配置 + skills + timers）。
 
 ## 组成
 
