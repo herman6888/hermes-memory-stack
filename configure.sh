@@ -69,9 +69,17 @@ OV_KEY=$(grep -o '"root_api_key":[^,}]*' "$OV_DATA_DIR/ov.conf" | sed 's/.*: *//
 OV_ACCT=$(curl -sf "http://127.0.0.1:${OV_PORT}/api/v1/admin/accounts" -H "Authorization: Bearer $OV_KEY" \
   | sed -n 's/.*"account_id":"\([^"]*\)".*/\1/p' | head -1)
 OV_ACCT=${OV_ACCT:-default}
-curl -sf -X POST "http://127.0.0.1:${OV_PORT}/api/v1/admin/accounts/${OV_ACCT}/users" \
+OV_USER_RESP=$(curl -s -m 15 -X POST "http://127.0.0.1:${OV_PORT}/api/v1/admin/accounts/${OV_ACCT}/users" \
   -H "Authorization: Bearer $OV_KEY" -H "Content-Type: application/json" \
-  -d '{"user_name":"agent","user_id":"agent"}' | tee /tmp/ov-user.json || { echo "WARN: OV admin API 建 user 失败，检查容器日志"; FAILS=$((FAILS+1)); }
+  -d '{"user_name":"agent","user_id":"agent"}' || true)
+echo "$OV_USER_RESP" > /tmp/ov-user.json
+if echo "$OV_USER_RESP" | grep -q '"user_key"'; then
+  echo "  OV user key 已签发（见 /tmp/ov-user.json）"
+elif echo "$OV_USER_RESP" | grep -q 'ALREADY_EXISTS'; then
+  echo "  OV user 已存在（幂等跳过；历史 key 在首次运行输出里）"
+else
+  echo "WARN: OV admin API 建 user 失败: $OV_USER_RESP"; FAILS=$((FAILS+1))
+fi
 echo "→ 把返回的 user key 填入 Hermes 配置（memory backend = openviking），见 templates/SOUL-memory-discipline.md 同级的 hermes 记忆配置说明"
 
 echo "== Hermes：memory MD 宪章行 =="

@@ -85,7 +85,7 @@ call :step "Docker Desktop"
 where docker >nul 2>&1 && ( echo    ~ skip: docker already installed & goto :docker_done )
 if "%WINGET%"=="yes" (
     echo    Installing Docker Desktop ^(WSL2 backend, admin consent required^)...
-    winget install -e --source winget --accept-package-agreements --accept-eula Docker.DockerDesktop
+    winget install -e --source winget --accept-package-agreements --accept-source-agreements Docker.DockerDesktop
 ) else ( echo    ! install Docker Desktop manually: https://www.docker.com/products/docker-desktop/ )
 :docker_done
 rem wait for daemon (max 120s)
