@@ -93,8 +93,9 @@ set /a T=0
 :docker_wait
 docker info >nul 2>&1 && ( echo    ^> docker daemon running & goto :docker_ok )
 set /a T+=5
-if %T% LSS 120 ( timeout /t 5 /nobreak >nul & goto :docker_wait )
-echo    x ABORT: docker daemon not running - start Docker Desktop and re-run this script
+if %T% LSS 120 ( ping -n 6 127.0.0.1 >nul & goto :docker_wait )
+echo    x ABORT: docker daemon not running. If Docker Desktop was just installed,
+echo    x reboot this PC (WSL2 setup needs it), start Docker Desktop, re-run this script.
 exit /b 1
 :docker_ok
 
