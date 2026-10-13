@@ -143,7 +143,7 @@ ok "包管理器：$PKG"
 step "基础工具（git curl jq ripgrep zstd rsync sqlite git-crypt postgres 客户端）"
 if [ "$PKG" = pacman ]; then
     PKGS=()
-    for p in git curl jq ripgrep zstd rsync sqlite git-crypt postgresql-libs; do has_pkg "$p" || PKGS+=("$p"); done
+    for p in git curl jq ripgrep zstd rsync sqlite git-crypt postgresql-libs unzip; do has_pkg "$p" || PKGS+=("$p"); done
     if [ ${#PKGS[@]} -eq 0 ]; then skip "全部已安装"
     else echo "      需安装：${PKGS[*]}"
         $SUDO pacman -S --needed --noconfirm "${PKGS[@]}" || die "pacman 安装失败"
@@ -151,7 +151,7 @@ if [ "$PKG" = pacman ]; then
 else
     export DEBIAN_FRONTEND=noninteractive
     PKGS=()
-    for p in git curl jq ripgrep zstd rsync sqlite3 git-crypt postgresql-client pipx ca-certificates; do has_pkg "$p" || PKGS+=("$p"); done
+    for p in git curl jq ripgrep zstd rsync sqlite3 git-crypt postgresql-client pipx ca-certificates unzip; do has_pkg "$p" || PKGS+=("$p"); done
     if [ ${#PKGS[@]} -eq 0 ]; then skip "全部已安装"
     else echo "      需安装：${PKGS[*]}"
         $SUDO apt-get update -qq && $SUDO apt-get install -y "${PKGS[@]}" || die "apt 安装失败"
