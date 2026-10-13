@@ -92,12 +92,19 @@ where winget >nul 2>&1 && (
 )
 if not exist "C:\Program Files\Docker\Docker\Docker Desktop.exe" echo    ! if winget failed, install manually: https://www.docker.com/products/docker-desktop/
 :docker_done
-rem wait for daemon (max 120s)
+rem make sure Docker Desktop app is actually running (installer skips autostart)
+if exist "C:\Program Files\Docker\Docker\Docker Desktop.exe" (
+  tasklist /fi "imagename eq Docker Desktop.exe" 2>nul | find /i "Docker Desktop.exe" >nul || (
+    echo    Starting Docker Desktop...
+    start "" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+  )
+)
+rem wait for daemon (max 300s, first start is slow)
 set /a T=0
 :docker_wait
 docker info >nul 2>&1 && ( echo    ^> docker daemon running & goto :docker_ok )
 set /a T+=5
-if %T% LSS 120 ( ping -n 6 127.0.0.1 >nul & goto :docker_wait )
+if %T% LSS 300 ( ping -n 6 127.0.0.1 >nul & goto :docker_wait )
 echo    x ABORT: docker daemon not running. If Docker Desktop was just installed,
 echo    x reboot this PC (WSL2 setup needs it), start Docker Desktop, re-run this script.
 exit /b 1
