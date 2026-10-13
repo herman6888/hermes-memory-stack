@@ -188,6 +188,10 @@ ok "compose 可用：$COMPOSE"
 # ---- 4 node / uv / bun / pipx ------------------------------------------------
 step "语言工具链（node≥22、uv、bun、pipx）"
 export PATH="$HOME/.local/bin:$HOME/.bun/bin:$HOME/.cargo/bin:$PATH"
+# persist PATH for future shells (gbrain/bun/uv live in ~/.local/bin, ~/.bun/bin)
+for rc in "$HOME/.bashrc" "$HOME/.profile"; do
+    grep -q '\.local/bin' "$rc" 2>/dev/null || echo 'export PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"' >> "$rc"
+done
 if has_cmd node && [ "$(node -v | sed 's/v\([0-9]*\).*/\1/')" -ge 22 ]; then
     skip "node $(node -v)"
 else

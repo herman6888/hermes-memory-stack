@@ -1,7 +1,7 @@
 [Unit]
 Description=brain backup weekly timer
 [Timer]
-OnCalendar=*-*-* 22:30 Sunday
+OnCalendar=Sun *-*-* 22:30:00
 Persistent=true
 RandomizedDelaySec=120
 [Install]

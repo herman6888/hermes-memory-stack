@@ -58,7 +58,11 @@ if [ ! -f "$OV_DATA_DIR/ov.conf" ]; then
   docker compose -f "$ROOT/docker-compose.yml" up -d --force-recreate openviking 2>/dev/null && sleep 20
 fi
 OV_KEY=$(grep -o '"root_api_key":[^,}]*' "$OV_DATA_DIR/ov.conf" | sed 's/.*: *//; s/"//g')
-curl -sf -X POST "http://127.0.0.1:${OV_PORT}/api/v1/admin/users" \
+# OV v0.5.x: admin users API is per-account; discover the account id (default on fresh installs)
+OV_ACCT=$(curl -sf "http://127.0.0.1:${OV_PORT}/api/v1/admin/accounts" -H "Authorization: Bearer $OV_KEY" \
+  | sed -n 's/.*"account_id":"\([^"]*\)".*/\1/p' | head -1)
+OV_ACCT=${OV_ACCT:-default}
+curl -sf -X POST "http://127.0.0.1:${OV_PORT}/api/v1/admin/accounts/${OV_ACCT}/users" \
   -H "Authorization: Bearer $OV_KEY" -H "Content-Type: application/json" \
   -d '{"user_name":"agent"}' | tee /tmp/ov-user.json || { echo "WARN: OV admin API 建 user 失败，检查容器日志"; FAILS=$((FAILS+1)); }
 echo "→ 把返回的 user key 填入 Hermes 配置（memory backend = openviking），见 templates/SOUL-memory-discipline.md 同级的 hermes 记忆配置说明"
