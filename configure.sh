@@ -28,6 +28,13 @@ if [ "$EP" = lmstudio ] && ! grep -q '^LMSTUDIO_BASE_URL=' .env 2>/dev/null; the
     echo "LMSTUDIO_BASE_URL=$EMBED_BASE_URL" >> .env; export LMSTUDIO_BASE_URL="$EMBED_BASE_URL"
 fi
 gbrain config set engine postgres 2>/dev/null
+# gbrain ≥0.60 masks secrets at rest in config.json; the real DATABASE_URL must
+# live in ~/.gbrain/.env (gbrain's trusted env file) or every connect gets the masked value.
+mkdir -p "$HOME/.gbrain"
+if ! grep -q '^DATABASE_URL=' "$HOME/.gbrain/.env" 2>/dev/null; then
+  echo "DATABASE_URL=postgresql://${PG_USER}:${PG_PASSWORD}@127.0.0.1:${PG_PORT}/gbrain" >> "$HOME/.gbrain/.env"
+  chmod 600 "$HOME/.gbrain/.env"
+fi
 gbrain config set database_url "postgresql://${PG_USER}:${PG_PASSWORD}@127.0.0.1:${PG_PORT}/gbrain" || FAILS=$((FAILS+1))
 # embed 模型走 migrate embeddings（v0.60.x 真正的配置平面），config set 会被忽略
 gbrain migrate embeddings --to "$EP:$EMBED_MODEL" --dim "$EMBED_DIM" --yes --max-cost-usd 5 \
@@ -64,7 +71,7 @@ OV_ACCT=$(curl -sf "http://127.0.0.1:${OV_PORT}/api/v1/admin/accounts" -H "Autho
 OV_ACCT=${OV_ACCT:-default}
 curl -sf -X POST "http://127.0.0.1:${OV_PORT}/api/v1/admin/accounts/${OV_ACCT}/users" \
   -H "Authorization: Bearer $OV_KEY" -H "Content-Type: application/json" \
-  -d '{"user_name":"agent"}' | tee /tmp/ov-user.json || { echo "WARN: OV admin API 建 user 失败，检查容器日志"; FAILS=$((FAILS+1)); }
+  -d '{"user_name":"agent","user_id":"agent"}' | tee /tmp/ov-user.json || { echo "WARN: OV admin API 建 user 失败，检查容器日志"; FAILS=$((FAILS+1)); }
 echo "→ 把返回的 user key 填入 Hermes 配置（memory backend = openviking），见 templates/SOUL-memory-discipline.md 同级的 hermes 记忆配置说明"
 
 echo "== Hermes：memory MD 宪章行 =="
