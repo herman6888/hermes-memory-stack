@@ -61,21 +61,24 @@ echo    Wizard done: restore=!DO_RESTORE!
 set STEP=1
 
 call :step "winget packages (git, node, bun, uv, python)"
-if "%WINGET%"=="no" ( echo    ! skip winget step ) else (
-    where git   >nul 2>&1 || winget install -e --source winget --accept-source-agreements --accept-package-agreements Git.Git
-    where node  >nul 2>&1 || winget install -e --source winget --accept-package-agreements OpenJS.NodeJS.LTS
-    where bun   >nul 2>&1 || winget install -e --source winget --accept-package-agreements Oven-sh.Bun
-    where uv    >nul 2>&1 || winget install -e --source winget --accept-package-agreements astral-sh.uv
-    where python >nul 2>&1 || winget install -e --source winget --accept-package-agreements Python.Python.3.12
-)
+where winget >nul 2>&1 || ( echo    ! skip winget step
+    goto :step2_done )
+where git   >nul 2>&1 || winget install -e --source winget --accept-source-agreements --accept-package-agreements Git.Git
+where node  >nul 2>&1 || winget install -e --source winget --accept-package-agreements OpenJS.NodeJS.LTS
+where bun   >nul 2>&1 || winget install -e --source winget --accept-package-agreements Oven-sh.Bun
+where uv    >nul 2>&1 || winget install -e --source winget --accept-package-agreements astral-sh.uv
+where python >nul 2>&1 || winget install -e --source winget --accept-package-agreements Python.Python.3.12
+:step2_done
 set STEP=%STEP%
 rem refresh PATH in this session
 set "PATH=%PATH%;%ProgramFiles%\Git\cmd;%ProgramFiles%\nodejs;%USERPROFILE%\.bun\bin;%USERPROFILE%\.local\bin;%LOCALAPPDATA%\Programs\Python\Python312\Scripts"
 
 call :step "MSYS2 (git-crypt + bash for scripts)"
-if exist "C:\msys64\usr\bin\bash.exe" ( echo    ~ skip: MSYS2 already installed ) else (
-    if "%WINGET%"=="yes" ( winget install -e --source winget --accept-package-agreements MSYS2.MSYS2 ) else ( echo    ! install MSYS2 manually: https://www.msys2.org )
-)
+if exist "C:\msys64\usr\bin\bash.exe" ( echo    ~ skip: MSYS2 already installed
+    goto :msys2_pkgs )
+where winget >nul 2>&1 && winget install -e --source winget --accept-package-agreements MSYS2.MSYS2
+if not exist "C:\msys64\usr\bin\bash.exe" echo    ! install MSYS2 manually: https://www.msys2.org
+:msys2_pkgs
 if exist "C:\msys64\usr\bin\bash.exe" (
     C:\msys64\usr\bin\pacman.exe -S --needed --noconfirm git-crypt rsync zstd jq >nul 2>&1
     echo    ^> git-crypt/rsync/zstd/jq ready
@@ -83,10 +86,11 @@ if exist "C:\msys64\usr\bin\bash.exe" (
 
 call :step "Docker Desktop"
 where docker >nul 2>&1 && ( echo    ~ skip: docker already installed & goto :docker_done )
-if "%WINGET%"=="yes" (
+where winget >nul 2>&1 && (
     echo    Installing Docker Desktop ^(WSL2 backend, admin consent required^)...
     winget install -e --source winget --accept-package-agreements --accept-source-agreements Docker.DockerDesktop
-) else ( echo    ! install Docker Desktop manually: https://www.docker.com/products/docker-desktop/ )
+)
+if not exist "C:\Program Files\Docker\Docker\Docker Desktop.exe" echo    ! if winget failed, install manually: https://www.docker.com/products/docker-desktop/
 :docker_done
 rem wait for daemon (max 120s)
 set /a T=0
