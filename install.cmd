@@ -107,6 +107,8 @@ set /a T+=5
 if %T% LSS 300 ( ping -n 6 127.0.0.1 >nul & goto :docker_wait )
 echo    x ABORT: docker daemon not running. If Docker Desktop was just installed,
 echo    x reboot this PC (WSL2 setup needs it), start Docker Desktop, re-run this script.
+echo    x NOTE: inside a VM, WSL2 needs nested virtualization. VirtualBox 7.2 + Win11 25H2
+echo    x is structurally incompatible (boot hangs). Run this script on physical hardware.
 exit /b 1
 :docker_ok
 
